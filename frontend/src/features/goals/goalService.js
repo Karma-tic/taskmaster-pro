@@ -16,6 +16,7 @@ const createGoal = async (goalData, token) => {
 }
 
 // Get user goals
+// Get user goals
 const getGoals = async (token) => {
   const config = {
     headers: {
@@ -23,9 +24,26 @@ const getGoals = async (token) => {
     },
   }
 
-  const response = await axios.get(API_URL, config)
+  try {
+    // 1. Try to fetch from Network (API)
+    const response = await axios.get(API_URL, config)
 
-  return response.data
+    // 2. If successful, backup data to LocalStorage
+    localStorage.setItem('offlineGoals', JSON.stringify(response.data))
+    
+    return response.data
+  } catch (error) {
+    // 3. If Network fails (Offline), try LocalStorage
+    const offlineData = localStorage.getItem('offlineGoals')
+    
+    if (offlineData) {
+        console.log('Network failed. Serving from LocalStorage (Offline Mode).')
+        return JSON.parse(offlineData)
+    }
+    
+    // If no cache exists either, throw the error as usual
+    throw error
+  }
 }
 
 // Delete user goal
