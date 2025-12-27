@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose'); // <--- This line was missing
 
 const goalSchema = mongoose.Schema(
   {
@@ -11,10 +11,15 @@ const goalSchema = mongoose.Schema(
       type: String,
       required: [true, 'Please add a text value'],
     },
+    // The new image field
+    imageUrl: {
+      type: String,
+      required: false, 
+    },
   },
   {
     timestamps: true,
   }
-)
+);
 
-module.exports = mongoose.model('Goal', goalSchema)
+module.exports = mongoose.model('Goal', goalSchema);

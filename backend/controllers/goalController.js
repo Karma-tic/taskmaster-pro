@@ -36,22 +36,37 @@ const getGoals = asyncHandler(async (req, res) => {
 // @desc    Set goal
 // @route   POST /api/goals
 // @access  Private
+// @desc    Set goal
+// @route   POST /api/goals
+// @access  Private
 const setGoal = asyncHandler(async (req, res) => {
   if (!req.body.text) {
-    res.status(400)
-    throw new Error('Please add a text field')
+    res.status(400);
+    throw new Error('Please add a text field');
   }
 
+  // 1. Check if a file was uploaded
+  let imageUrl = '';
+  if (req.file) {
+    // req.file.location is the URL returned by AWS S3
+    imageUrl = req.file.location;
+  }
+
+  // 2. Create the Goal in MongoDB
   const goal = await Goal.create({
     text: req.body.text,
     user: req.user.id,
-  })
-const cacheKey = `goals:${req.user.id}`;
-await redisClient.del(cacheKey);
+    imageUrl: imageUrl, // Save the S3 URL
+  });
 
-res.status(200).json(goal);
-  res.status(200).json(goal)
-})
+  // 3. Invalidate Redis Cache (So the new goal shows up)
+  const cacheKey = `goals:${req.user.id}`;
+  if (redisClient.isOpen) {
+      await redisClient.del(cacheKey);
+  }
+
+  res.status(200).json(goal);
+});
 
 // @desc    Update goal
 // @route   PUT /api/goals/:id
